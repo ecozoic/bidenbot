@@ -1,0 +1,9 @@
+# fly.toml app configuration file generated for bidenbot on 2023-10-13T18:39:54-07:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = "bidenbot"
+primary_region = "lax"
+
+[build]
