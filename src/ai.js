@@ -1,70 +1,65 @@
-const OpenAI = require('openai');
+const OpenAI = require("openai");
 
 const apiKey = process.env.API_KEY;
 
 const openai = new OpenAI({
-    apiKey,
+  apiKey,
 });
+
+const MODEL_PARAMS = {
+  model: "gpt-4o",
+  temperature: 0.7,
+};
 
 let DEBATE_MESSAGES = [];
 
-function buildMessage(prompt, role = 'user') {
-    return { content: prompt, role };
+function buildMessage(prompt, role = "user") {
+  return { content: prompt, role };
 }
 
-function parseResponse(response) {
-    return response.choices[0].message.content;
-}
+async function request(messages) {
+  console.log("** REQUEST **");
+  console.log(messages);
 
+  const response = await openai.chat.completions.create({
+    ...MODEL_PARAMS,
+    messages,
+  });
+
+  const message = response.choices[0].message;
+  console.log("** RESPONSE **");
+  console.log(message);
+
+  return message.content;
+}
 async function ask(prompt) {
-    prompt = `${prompt} in the voice of an angry, confused, and sleepy Joe Biden`;
-    console.log(prompt);
-    const response = await openai.chat.completions.create({
-        model: 'gpt-4',
-        messages: [buildMessage(prompt)],
-        temperature: 0.7,
-    });
+  prompt = `${prompt} in the voice of an angry, confused, and sleepy Joe Biden`;
+  const answer = await request([buildMessage(prompt)]);
 
-    const answer = parseResponse(response);
-    console.log(answer);
-    return answer;
+  return answer;
 }
 
 async function initiateDebate() {
-    const prompt = 'I would like to have a debate where you are the voice of Joe Biden and I am the voice of Donald Trump. You should prefix all your responses with BIDEN:. Is that ok?';
-    console.log(prompt);
-    DEBATE_MESSAGES = [buildMessage(prompt, 'system')];
+  const prompt =
+    "I would like to have a debate where you are the voice of Joe Biden and I am the voice of Donald Trump. We should try to disagree and poke fun at one another. You should prefix all your responses with BIDEN:. Is that ok?";
+  DEBATE_MESSAGES = [buildMessage(prompt, "system")];
 
-    const response = await openai.chat.completions.create({
-        model: 'gpt-4',
-        messages: DEBATE_MESSAGES,
-        temperature: 0.7,
-    });
+  const answer = await request(DEBATE_MESSAGES);
 
-    const answer = parseResponse(response);
-    console.log(answer);
-    DEBATE_MESSAGES.push(buildMessage(answer, 'assistant'));
-    console.log(DEBATE_MESSAGES);
-    return answer;
+  DEBATE_MESSAGES.push(buildMessage(answer, "assistant"));
+  return answer;
 }
 
 async function debate(prompt) {
-    DEBATE_MESSAGES.push(buildMessage(prompt));
-    const response = await openai.chat.completions.create({
-        model: 'gpt-4',
-        messages: DEBATE_MESSAGES,
-        temperature: 0.7,
-    });
+  DEBATE_MESSAGES.push(buildMessage(prompt));
+  const answer = await request(DEBATE_MESSAGES);
 
-    const answer = parseResponse(response);
-    console.log(answer);
-    DEBATE_MESSAGES.push(buildMessage(answer, 'assistant'));
-    console.log(DEBATE_MESSAGES);
-    return answer;
+  DEBATE_MESSAGES.push(buildMessage(answer, "assistant"));
+  return answer;
 }
 
 module.exports = {
-    ask,
-    initiateDebate,
-    debate,
+  ask,
+  initiateDebate,
+  debate,
 };
